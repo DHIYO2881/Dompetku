@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0A0A0A">
+  <title>DompetKu - Catat Uang</title>
+  <style>
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}
+    body{margin:0 auto;max-width:480px;min-height:100vh;padding-bottom:100px;background:#0a0a0a;color:#fff}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .top{padding:22px 20px 0;display:flex;justify-content:space-between;align-items:center}
+    .top h1{font-size:26px;margin:0}.top p{color:#9ca3af;font-size:13px;margin:4px 0 0}
+    .avatar{width:44px;height:44px;border-radius:50%;background:#222;display:grid;place-items:center;font-size:22px}
+    .card{margin:18px 20px 0;padding:20px;border-radius:20px;background:linear-gradient(135deg,#0f3d33,#0a0a0a 70%)}
+    .card small{color:#a7f3d0}.card h2{font-size:32px;margin:8px 0 14px;overflow-wrap:anywhere}
+    .pills{display:flex;gap:8px;flex-wrap:wrap}.pill{font-size:13px;padding:7px 12px;border-radius:999px;font-weight:600}
+    .in{background:#10b98126;color:#6ee7b7;border:1px solid #10b98166}.out{background:#ef444426;color:#fca5a5;border:1px solid #ef444466}
+    .section{padding:20px 20px 0}.section-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+    .section-head h3{font-size:18px;margin:0}.section-head button{background:none;border:0;color:#2dd4bf;font-size:13px}
+    .chart{height:130px;display:flex;align-items:flex-end;gap:8px;padding:10px 0 0}
+    .bar-wrap{flex:1;text-align:center;min-width:0}.bar{min-height:4px;max-width:24px;margin:auto;background:#2dd4bf;border-radius:7px 7px 0 0}
+    .bar-wrap span{display:block;color:#9ca3af;font-size:11px;margin-top:6px}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .item{background:#171717;border-radius:16px;padding:12px;display:flex;gap:10px;align-items:center}
+    .icon{width:42px;height:42px;border-radius:50%;background:#262626;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+    .item-info{flex:1;min-width:0}.item-info b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+    .item-info small{color:#9ca3af;font-size:11px}.amt{font-weight:700;font-size:13px;white-space:nowrap}
+    .green{color:#4ade80}.red{color:#f87171}
+    .actions{display:flex;gap:5px}.mini{border:0;background:#262626;color:#fff;border-radius:9px;padding:7px;font-size:12px}
+    .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#111;padding:10px 16px 16px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #222;z-index:5}
+    .nav button{background:none;border:0;color:#9ca3af;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px}
+    .nav button.active{color:#2dd4bf}.nav .plus{width:58px;height:58px;background:#2dd4bf;border-radius:50%;color:#000;font-size:32px;line-height:1;margin-top:-38px;border:4px solid #0a0a0a}
+    .page{display:none}.page.active{display:block}
+    input,select{width:100%;background:#171717;border:1px solid #333;color:#fff;padding:13px;border-radius:12px;margin-top:7px}
+    label{display:block;color:#9ca3af;font-size:13px;margin-top:14px}
+    .type,.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .type button,.chips button{background:#1f1f1f;border:1px solid #333;color:#fff;padding:10px 12px;border-radius:12px}
+    .type button{flex:1}.type .sel-in{background:#065f46;border-color:#10b981}.type .sel-out{background:#7f1d1d;border-color:#ef4444}
+    .chips button{border-radius:999px}.chips button.sel{background:#2dd4bf;color:#000;border-color:#2dd4bf;font-weight:700}
+    .btn{width:100%;background:#2dd4bf;color:#000;border:0;padding:15px;border-radius:14px;font-weight:800;margin-top:16px}
+    .btn-ghost{background:#262626;color:#fff}.danger{color:#f87171}
+    .stat-box,.wallet{background:#171717;border-radius:15px;padding:14px;margin-top:10px}
+    .wallet{display:flex;justify-content:space-between;gap:10px}
+    .progress{height:10px;background:#262626;border-radius:99px;overflow:hidden;margin-top:9px}.progress i{display:block;height:100%;background:#2dd4bf}
+    .empty{text-align:center;color:#9ca3af;padding:26px 10px;font-size:14px}
+    .notice{font-size:12px;color:#9ca3af;line-height:1.5}
+    h2{font-size:24px;margin:0}
+  </style>
+</head>
+<body>
+  <main>
+    <section id="page-home" class="page active">
+      <header class="top">
+        <div><h1>Halo 👋</h1><p id="today"></p></div>
+        <div class="avatar" aria-hidden="true">👤</div>
+      </header>
+      <div class="card">
+        <small>Total Saldo</small><h2 id="saldo">Rp 0</h2>
+        <div class="pills"><span class="pill in" id="totalIn"></span><span class="pill out" id="totalOut"></span></div>
+      </div>
+      <div class="section">
+        <div class="section-head"><h3>Statistik Minggu Ini</h3><button data-page="statistik">Lihat</button></div>
+        <div class="chart" id="chart" aria-label="Grafik pengeluaran minggu ini"></div>
+      </div>
+      <div class="section">
+        <div class="section-head"><h3>Transaksi Terakhir</h3><button data-page="statistik">Lihat Semua</button></div>
+        <div class="list" id="listHome"></div>
+      </div>
+    </section>
+
+    <section id="page-tambah" class="page">
+      <div class="section">
+        <h2 id="formTitle">Tambah Transaksi</h2>
+        <div class="type">
+          <button type="button" id="btnIn">⬆ Pemasukan</button>
+          <button type="button" id="btnOut">⬇ Pengeluaran</button>
+        </div>
+        <form id="transactionForm">
+          <label for="nominal">Nominal</label>
+          <input id="nominal" type="number" inputmode="numeric" min="1" step="1" placeholder="Contoh: 50000" required>
+          <label>Kategori</label><div class="chips" id="chips"></div>
+          <label for="ket">Keterangan (opsional)</label>
+          <input id="ket" maxlength="100" placeholder="Contoh: Bensin motor">
+          <label for="dompet">Dompet</label>
+          <select id="dompet"><option>Cash</option><option>Rekening</option><option>E-Wallet</option></select>
+          <label for="tanggal">Tanggal</label><input id="tanggal" type="date" required>
+          <button class="btn" type="submit" id="saveButton">Simpan Transaksi ✅</button>
+          <button class="btn btn-ghost" type="button" id="cancelButton">Batal</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="page-statistik" class="page">
+      <div class="section">
+        <h2>Semua Transaksi</h2>
+        <label for="monthFilter">Ringkasan dan transaksi bulan</label>
+        <input id="monthFilter" type="month">
+        <input id="cari" type="search" placeholder="🔍 Cari transaksi..." aria-label="Cari transaksi">
+        <div class="stat-box">
+          <b>Budget Bulan Ini</b><p class="notice" id="budgetText"></p>
+          <div class="progress"><i id="budgetBar"></i></div>
+        </div>
+        <div class="list" id="listAll" style="margin-top:14px"></div>
+      </div>
+    </section>
+
+    <section id="page-dompet" class="page">
+      <div class="section">
+        <h2>Dompet Saya</h2><div id="walletList"></div>
+        <div class="stat-box"><b>Tips Hemat</b><p class="notice">Pisahkan uang kebutuhan di awal bulan. Periksa ringkasan bulanan secara berkala agar pengeluaran tetap terpantau.</p></div>
+      </div>
+    </section>
+
+    <section id="page-profil" class="page">
+      <div class="section">
+        <h2>Profil</h2>
+        <div class="stat-box"><b>DompetKu v2.0</b><p class="notice">Data disimpan di penyimpanan lokal browser pada perangkat ini. Data tidak dikirim ke server.</p></div>
+        <button class="btn btn-ghost" id="exportButton">📥 Export ke CSV</button>
+        <button class="btn btn-ghost danger" id="clearButton">🗑 Hapus Semua Data</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="nav" aria-label="Navigasi utama">
+    <button class="active" data-page="home">🏠<span>Home</span></button>
+    <button data-page="statistik">📊<span>Statistik</span></button>
+    <button class="plus" data-page="tambah" aria-label="Tambah transaksi">+</button>
+    <button data-page="dompet">👛<span>Dompet</span></button>
+    <button data-page="profil">👤<span>Profil</span></button>
+  </nav>
+
+  <script>
+    'use strict';
+
+    const STORAGE_KEY = 'dompetku';
+    const categories = {
+      in: ['Gajian', 'Bonus', 'Jualan', 'Lainnya'],
+      out: ['Makan', 'Bensin', 'Servis Motor', 'Jajan', 'Pulsa', 'Lainnya']
+    };
+    const icons = {
+      Makan:'🍔', Bensin:'⛽', 'Servis Motor':'🔧', Jajan:'🍟',
+      Pulsa:'📱', Gajian:'🏦', Bonus:'💰', Jualan:'🛒', Lainnya:'📦'
+    };
+    const wallets = ['Cash', 'Rekening', 'E-Wallet'];
+    const $ = id => document.getElementById(id);
+    const fmt = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+    const localDate = (date = new Date()) => {
+      const d = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+      return d.toISOString().slice(0, 10);
+    };
+    const today = localDate();
+    let type = 'out';
+    let category = 'Makan';
+    let editingId = null;
+
+    function loadData() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter(x =>
+          x && (x.type === 'in' || x.type === 'out') &&
+          Number.isFinite(Number(x.nominal)) && Number(x.nominal) > 0 &&
+          typeof x.tanggal === 'string'
+        ).map(x => ({
+          id: String(x.id || Date.now() + Math.random()),
+          type: x.type,
+          cat: String(x.cat || 'Lainnya').slice(0, 40),
+          ket: String(x.ket || x.cat || 'Lainnya').slice(0, 100),
+          nominal: Math.floor(Number(x.nominal)),
+          dompet: wallets.includes(x.dompet) ? x.dompet : 'Cash',
+          tanggal: /^\d{4}-\d{2}-\d{2}$/.test(x.tanggal) ? x.tanggal : today
+        }));
+      } catch {
+        return [];
+      }
+    }
+
+    let data = loadData();
+
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        render();
+      } catch {
+        alert('Penyimpanan browser penuh atau tidak tersedia. Coba ekspor data lalu hapus dữ liệu lama.');
+      }
+    }
+
+    function showPage(page) {
+      document.querySelectorAll('.page').forEach(el => el.classList.toggle('active', el.id === 'page-' + page));
+      document.querySelectorAll('.nav [data-page]').forEach(el => el.classList.toggle('active', el.dataset.page === page));
+      if (page === 'tambah') renderCategories();
+      window.scrollTo(0, 0);
+    }
+
+    function setType(nextType) {
+      type = nextType;
+      $('btnIn').className = type === 'in' ? 'sel-in' : '';
+      $('btnOut').className = type === 'out' ? 'sel-out' : '';
+      if (!categories[type].includes(category)) category = categories[type][0];
+      renderCategories();
+    }
+
+    function renderCategories() {
+      const container = $('chips');
+      container.replaceChildren();
+      categories[type].forEach(cat => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = cat === category ? 'sel' : '';
+        button.textContent = `${icons[cat] || '📦'} ${cat}`;
+        button.addEventListener('click', () => {
+          category = cat;
+          renderCategories();
+        });
+        container.append(button);
+      });
+    }
+
+    function createItem(t) {
+      const item = document.createElement('article');
+      item.className = 'item';
+
+      const icon = document.createElement('div');
+      icon.className = 'icon';
+      icon.textContent = icons[t.cat] || '📦';
+
+      const info = document.createElement('div');
+      info.className = 'item-info';
+      const title = document.createElement('b');
+      title.textContent = t.ket || t.cat;
+      const detail = document.createElement('small');
+      const date = new Date(t.tanggal + 'T12:00:00');
+      const dateText = Number.isNaN(date.getTime())
+        ? t.tanggal
+        : date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+      detail.textContent = `${t.cat} • ${dateText} • ${t.dompet}`;
+      info.append(title, detail);
+
+      const amount = document.createElement('div');
+      amount.className = `amt ${t.type === 'in' ? 'green' : 'red'}`;
+      amount.textContent = `${t.type === 'in' ? '+' : '-'} ${fmt(t.nominal)}`;
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+      const edit = document.createElement('button');
+      edit.className = 'mini';
+      edit.type = 'button';
+      edit.textContent = 'Edit';
+      edit.setAttribute('aria-label', 'Edit transaksi');
+      edit.addEventListener('click', () => editTransaction(t.id));
+      const remove = document.createElement('button');
+      remove.className = 'mini';
+      remove.type = 'button';
+      remove.textContent = '✕';
+      remove.setAttribute('aria-label', 'Hapus transaksi');
+      remove.addEventListener('click', () => deleteTransaction(t.id));
+      actions.append(edit, remove);
+      item.append(icon, info, amount, actions);
+      return item;
+    }
+
+    function setList(container, entries, emptyMessage) {
+      container.replaceChildren();
+      if (!entries.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = emptyMessage;
+        container.append(empty);
+        return;
+      }
+      entries.forEach(entry => container.append(createItem(entry)));
+    }
+
+    function renderChart() {
+      const chart = $('chart');
+      chart.replaceChildren();
+      const names = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+      const now = new Date();
+      const monday = new Date(now);
+      monday.setHours(12, 0, 0, 0);
+      monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+      const values = Array(7).fill(0);
+
+      data.filter(x => x.type === 'out').forEach(x => {
+        const d = new Date(x.tanggal + 'T12:00:00');
+        const index = Math.round((d - monday) / 86400000);
+        if (index >= 0 && index < 7) values[index] += x.nominal;
+      });
+
+      const max = Math.max(...values, 1);
+      values.forEach((value, i) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'bar-wrap';
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = `${Math.max(4, Math.round(value / max * 90))}px`;
+        bar.title = `${names[i]}: ${fmt(value)}`;
+        const label = document.createElement('span');
+        label.textContent = names[i];
+        wrap.append(bar, label);
+        chart.append(wrap);
+      });
+    }
+
+    function render() {
+      const income = data.filter(x => x.type === 'in').reduce((sum, x) => sum + x.nominal, 0);
+      const expense = data.filter(x => x.type === 'out').reduce((sum, x) => sum + x.nominal, 0);
+      $('saldo').textContent = fmt(income - expense);
+      $('totalIn').textContent = `↗ Masuk ${fmt(income)}`;
+      $('totalOut').textContent = `↘ Keluar ${fmt(expense)}`;
+      $('today').textContent = new Date().toLocaleDateString('id-ID', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      });
+
+      const sorted = [...data].sort((a, b) => b.tanggal.localeCompare(a.tanggal));
+      setList($('listHome'), sorted.slice(0, 5), 'Belum ada transaksi. Tekan + untuk menambahkan.');
+
+      const month = $('monthFilter').value || today.slice(0, 7);
+      const monthly = sorted.filter(x => x.tanggal.startsWith(month));
+      const query = $('cari').value.trim().toLocaleLowerCase('id-ID');
+      const filtered = monthly.filter(x =>
+        `${x.ket} ${x.cat} ${x.dompet}`.toLocaleLowerCase('id-ID').includes(query)
+      );
+      setList($('listAll'), filtered, 'Tidak ada transaksi untuk pencarian atau bulan ini.');
+
+      const monthIncome = monthly.filter(x => x.type === 'in').reduce((s, x) => s + x.nominal, 0);
+      const monthExpense = monthly.filter(x => x.type === 'out').reduce((s, x) => s + x.nominal, 0);
+      const pct = monthIncome ? Math.round(monthExpense / monthIncome * 100) : 0;
+      $('budgetText').textContent = `Pengeluaran ${fmt(monthExpense)} dari pemasukan ${fmt(monthIncome)} (${pct}%).`;
+      $('budgetBar').style.width = `${Math.min(100, pct)}%`;
+
+      $('walletList').replaceChildren();
+      wallets.forEach(wallet => {
+        const balance = data.filter(x => x.dompet === wallet)
+          .reduce((sum, x) => sum + (x.type === 'in' ? x.nominal : -x.nominal), 0);
+        const row = document.createElement('div');
+        row.className = 'wallet';
+        const name = document.createElement('span');
+        name.textContent = `👛 ${wallet}`;
+        const amount = document.createElement('b');
+        amount.textContent = fmt(balance);
+        row.append(name, amount);
+        $('walletList').append(row);
+      });
+
+      renderChart();
+    }
+
+    function resetForm() {
+      editingId = null;
+      $('transactionForm').reset();
+      $('tanggal').value = today;
+      $('formTitle').textContent = 'Tambah Transaksi';
+      $('saveButton').textContent = 'Simpan Transaksi ✅';
+      setType('out');
+    }
+
+    function editTransaction(id) {
+      const t = data.find(x => x.id === String(id));
+      if (!t) return;
+      editingId = t.id;
+      type = t.type;
+      category = categories[type].includes(t.cat) ? t.cat : categories[type][0];
+      $('nominal').value = t.nominal;
+      $('ket').value = t.ket;
+      $('dompet').value = wallets.includes(t.dompet) ? t.dompet : 'Cash';
+      $('tanggal').value = t.tanggal;
+      $('formTitle').textContent = 'Edit Transaksi';
+      $('saveButton').textContent = 'Simpan Perubahan ✅';
+      setType(type);
+      showPage('tambah');
+    }
+
+    function deleteTransaction(id) {
+      if (!confirm('Hapus transaksi ini?')) return;
+      data = data.filter(x => x.id !== String(id));
+      save();
+    }
+
+    $('transactionForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const amount = Number($('nominal').value);
+      if (!Number.isSafeInteger(amount) || amount <= 0) {
+        alert('Masukkan nominal bulat yang lebih besar dari 0.');
+        return;
+      }
+      const transaction = {
+        id: editingId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+        type,
+        cat: category,
+        ket: $('ket').value.trim().slice(0, 100) || category,
+        nominal: amount,
+        dompet: wallets.includes($('dompet').value) ? $('dompet').value : 'Cash',
+        tanggal: /^\d{4}-\d{2}-\d{2}$/.test($('tanggal').value) ? $('tanggal').value : today
+      };
+      if (editingId) data = data.map(x => x.id === editingId ? transaction : x);
+      else data.unshift(transaction);
+      save();
+      resetForm();
+      showPage('home');
+    });
+
+    function csvCell(value) {
+      let text = String(value ?? '');
+      // Cegah nilai teks diperlakukan sebagai formula oleh aplikasi spreadsheet.
+      if (/^[\s]*[=+\-@]/.test(text)) text = "'" + text;
+      return '"' + text.replace(/"/g, '""') + '"';
+    }
+
+    $('exportButton').addEventListener('click', () => {
+      const rows = [
+        ['Tanggal', 'Kategori', 'Keterangan', 'Dompet', 'Tipe', 'Nominal'],
+        ...data.map(x => [x.tanggal, x.cat, x.ket, x.dompet, x.type, x.nominal])
+      ];
+      const csv = '\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'dompetku.csv';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+
+    $('clearButton').addEventListener('click', () => {
+      if (!confirm('Yakin ingin menghapus semua data transaksi? Tindakan ini tidak bisa dibatalkan.')) return;
+      data = [];
+      save();
+    });
+
+    document.querySelectorAll('[data-page]').forEach(button => {
+      button.addEventListener('click', () => showPage(button.dataset.page));
+    });
+    $('btnIn').addEventListener('click', () => setType('in'));
+    $('btnOut').addEventListener('click', () => setType('out'));
+    $('cancelButton').addEventListener('click', () => {
+      resetForm();
+      showPage('home');
+    });
+    $('cari').addEventListener('input', render);
+    $('monthFilter').addEventListener('input', render);
+
+    $('monthFilter').value = today.slice(0, 7);
+    $('tanggal').value = today;
+    setType('out');
+    render();
+  </script>
+</body>
+</html>
